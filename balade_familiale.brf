@@ -1,8 +1,9 @@
-# Un profil vélo adapté aux sorties en groupe, y aux balades familiales
+# Mon profil parfait universel
+# Un profil vélo adaptable aux sorties en groupe, aux balades familiales
 # Adapté aux balades à rythme tranquille, en évitant les routes à fort trafic
 # Forte pénalité pour les barrières et escaliers sur le chemin
 # Possibilité de les éviter complètement
-# Profil en Français
+# Profil partiellement en Français
 
 
 # A bicycle trekking profile improved for family-friendly rides
@@ -18,39 +19,47 @@
 #
 # bstart /global
 ---context:global 
-assign   cyclist_profile          = 2         # %cyclist_profile% | Profil de cycliste, pour calculer le temps de trajet et optimiser certains paramètres | [0=Valeur BRouter par défaut, 1=Balade de groupe, 2=Balade familiale, 3=Vélo cargo, 4=Balade entre amis]
-assign   hills                    = 2         # %hills% | Pénalité pour le relief | [0=Normal, 1=Plus de pénalité pour les pentes >3.0%, 2=Balade familiale (forte pénalité sur les pentes), 3=simulates ascend/length time equiv., 4=valley mode, 5=No-Flats mode]
+assign   cyclist_profile          = 4         # %cyclist_profile% | Profil de cycliste, pour calculer le temps de trajet et optimiser certains paramètres | [0=Valeur BRouter par défaut, 1=Balade de groupe, 2=Balade familiale, 3=Vélo cargo, 4=Balade entre amis, 5=Parade manifestive]
+assign   mode_vacances            = true     # %mode_vacances% | Ajoute 15 kg de bagages | boolean
 
-assign   cargo_mode            switch equal cyclist_profile 2 true   switch equal cyclist_profile 3 true false
+assign   hills                    = 0         # %hills% | Pénalité pour le relief | [0=Normal, 1=Plus de pénalité pour les pentes >3.0%, 2=Balade familiale (forte pénalité sur les pentes), 3=simulates ascend/length time equiv., 4=valley mode, 5=No-Flats mode]
 
-assign   allow_steps              = false     # %allow_steps% | Activer pour accepter les escaliers (avec pénalité) | boolean
-assign   allow_dismount           = false     # %allow_dismount% | Activer pour accepter les barrières imposant de descendre du vélo, ou les zones interdites aux vélos (avec pénalité) |boolean
+assign   cargo_mode            switch equal cyclist_profile 2 true   switch equal cyclist_profile 3 true switch equal cyclist_profile 5 true false
+
+assign   allow_steps              = true     # %allow_steps% | Activer pour accepter les escaliers (avec pénalité) | boolean
+assign   allow_dismount           = true     # %allow_dismount% | Activer pour accepter les barrières imposant de descendre du vélo, ou les zones interdites aux vélos (avec pénalité) |boolean
 
 assign   avoid_unsafe             = true      # %avoid_unsafe% | Activer pour limiter les routes à forte circulation | boolean
 assign   is_wet                   = false     # %is_wet% | En cas de météo humide, activer pour limiter les chemins non revêtus | boolean
+assign   stick_to_cycleroutes     = false   # %stick_to_cycleroutes% | Set true to follow cycleroutes as much as possible | boolean
+assign   include_proposed_cycleroutes     = true   # %include_proposed_cycleroutes% | If set to true proposed cycleroutes count as existing (with a penalty) | boolean
 
-assign   consider_noise           = false  # %consider_noise% | Activate to prefer a low-noise route | boolean
-assign   consider_river           = false  # %consider_river% | Activate to prefer a route along rivers, lakes, etc. | boolean
-assign   consider_forest          = false  # %consider_forest% | Activate to prefer a route in forest or parks | boolean
+assign   consider_noise           = true  # %consider_noise% | Activate to prefer a low-noise route | boolean
+assign   consider_river           = true  # %consider_river% | Activate to prefer a route along rivers, lakes, etc. | boolean
+assign   consider_forest          = true  # %consider_forest% | Activate to prefer a route in forest or parks | boolean
 assign   consider_town            = false  # %consider_town% | Activate to bypass cities / big towns as far as possible | boolean
-assign   consider_traffic         = false  # %consider_traffic% | Activate to consider traffic estimates | boolean
-
+assign   consider_traffic         = true  # %consider_traffic% | Activate to consider traffic estimates. | boolean
 
 
 # Kinematic model parameters (travel time computation)
-assign   totalMass             switch equal cyclist_profile 1 90     switch equal cyclist_profile 2 90     switch equal cyclist_profile 3 120     switch equal cyclist_profile 4 90      45
-assign   maxSpeed              switch equal cyclist_profile 1 20     switch equal cyclist_profile 2 18     switch equal cyclist_profile 3 25      switch equal cyclist_profile 4 30      90
-assign   S_C_x                 switch equal cyclist_profile 1 0.225  switch equal cyclist_profile 2 0.225  switch equal cyclist_profile 3 0.4     switch equal cyclist_profile 4 0.3     0.225
-assign   C_r                   switch equal cyclist_profile 1 0.01   switch equal cyclist_profile 2 0.01   switch equal cyclist_profile 3 0.01    switch equal cyclist_profile 4 0.005   0.01
-assign   bikerPower            switch equal cyclist_profile 1 60     switch equal cyclist_profile 2 50     switch equal cyclist_profile 3 120     switch equal cyclist_profile 4 120     100
+assign   totalMass             switch equal cyclist_profile 1 90     switch equal cyclist_profile 2 90     switch equal cyclist_profile 3 120     switch equal cyclist_profile 4 
+                                                                                                                                                                                 switch mode_vacances 105 90
+                                                                                                                                                                                         switch equal cyclist_profile 5 90        45
+assign   maxSpeed              switch equal cyclist_profile 1 20     switch equal cyclist_profile 2 18     switch equal cyclist_profile 3 25      switch equal cyclist_profile 4 30      switch equal cyclist_profile 5 13        90
+assign   S_C_x                 switch equal cyclist_profile 1 0.225  switch equal cyclist_profile 2 0.225  switch equal cyclist_profile 3 0.4     switch equal cyclist_profile 4 0.3     switch equal cyclist_profile 5 0.225     0.225
+assign   C_r                   switch equal cyclist_profile 1 0.01   switch equal cyclist_profile 2 0.01   switch equal cyclist_profile 3 0.01    switch equal cyclist_profile 4 0.005   switch equal cyclist_profile 5 0.01      0.01
+assign   bikerPower            switch equal cyclist_profile 1 60     switch equal cyclist_profile 2 50     switch equal cyclist_profile 3 120     switch equal cyclist_profile 4 100     switch equal cyclist_profile 5 50        100
 
 
 assign   turnInstructionMode  = 1 # 0=none, 1=auto-choose, 2=locus-style, 3=osmand-style
-assign   cycleroutes_pref       0.2 # also CRP *)  costfactor penalty for not being cycleroute
+assign   cycleroutes_pref       switch equal cyclist_profile 5     0
+                                switch equal stick_to_cycleroutes true        3
+                                                                   0.1 #costfactor penalty for not being cycleroute
+
 assign   MTB_factor             0.0 # default 0.0, *)
 assign   smallpaved_factor      0.0 # default 0.0, *)
 
-assign   isbike_for_mainroads   true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
+assign   isbike_for_mainroads   switch equal cyclist_profile 5 true     true # default=true / if false then bike friendly tag hints for mainroads are ignored, keeping their high penalties. v2.5.20
 assign   path_preference        0.0 # 0.0 as default, try 20.0 to penalize nonpath ways a/o paved ways
 
 assign   consider_elevation     1 # 1 as default
@@ -126,7 +135,7 @@ assign   downhillCFshift   0.0 # prioritizing/penalizing of up/downhills, based 
 assign    pass1coefficient 1.8
 assign    pass2coefficient 0
 
-assign   use_proposed_cn        1 # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
+assign   use_proposed_cn        include_proposed_cycleroutes # 0 as default, considers proposed cycle networks as unmarked but valid cycleroutes.
 assign   considerTurnRestrictions = true  #v2.5.11
 
 assign   unsafe_penalty_value 1.0 # 1 - was 2 in Trekking, but this may cause U-like safe routes
@@ -157,9 +166,6 @@ assign   ford_costfactor =       if ( equal ford_handling_coef million ) then 99
 
 assign   UDcostON               true
 
-assign   ncncoef  max 0 min 1 multiply cycleroutes_pref 0.2
-assign   lcncoef  max 0 min 1 multiply cycleroutes_pref 1.0
-
 # bend /global
 # bstart /way
 ---context:way   # following code refers to way-tags
@@ -177,7 +183,10 @@ assign any_cn or any_cn_yes switch use_proposed_cn any_cn_proposed 0
 
 assign nodeaccessgranted or any_cycleroute any_cn
                    
-assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
+# assign is_ldcr if (  equal cycleroutes_pref 0.0 )   then false else nodeaccessgranted
+assign is_ldcr or any_cycleroute any_cn
+assign is_proposed_ldcr and ( not any_cn_yes ) any_cn_proposed
+
 
 assign istrack  highway=track|road|path|footway
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
@@ -193,13 +202,19 @@ assign isbike_candidate or bicycle=yes|permissive|designated or hascycleway
 assign isbike and ( or ( not ismainroad ) isbike_for_mainroads )  isbike_candidate
 
 
-assign ispaved surface=paved|asphalt|concrete|paving_stones
+assign ispaved surface=paved|asphalt|concrete|paving_stones|compacted
 assign isunpaved not or surface= or ispaved or surface=fine_gravel surface=cobblestone
 
 assign probablyGood or ispaved  and isbike not isunpaved  #probably good surface - weather independent
 
-assign turncost  if  ismainroad  then 90    else if ispaved then 60   else 30 
-# Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
+
+assign turncost
+  if equal cyclist_profile 5 then
+    if  ismainroad  then 30    else if ispaved then 100   else 200
+    #high turncost on small streets
+  else
+    if  ismainroad  then 90    else if ispaved then 60   else 30 
+    # Turn cost is based solely on estimation of road speediness and eventual time cost of turning, partially promoting tracks )
 
 assign ismuddy and is_wet
                and ( not surface=gravel|pebblestone )  # ***)
@@ -250,7 +265,11 @@ assign badoneway =
 
 assign onewaypenalty = 
        if ( badoneway ) then 
-         if cycleway=opposite|opposite_lane|opposite_track  then 0
+         if equal cyclist_profile 5 then
+           if cycleway:left=share_busway then 0
+           else if highway=residential then 10
+           else 200
+         else if cycleway=opposite|opposite_lane|opposite_track  then 0
          else if oneway:bicycle=no                          then 0
          else if highway=primary|primary_link               then 50
          else if highway=secondary|secondary_link           then 30
@@ -337,9 +356,11 @@ if route=ferry then 10000
 else if ( ford=yes )                                        then ford_initialcost_way  
 else add ( switch bikeaccess 0 dismountpenalty )
      if ( highway=motorway|motorway_link|trunk|trunk_link ) then 500
-else if ( highway=primary|primary_link )                    then 120
-else if ( highway=secondary|secondary_link )                then 80
-else if ( highway=tertiary|tertiary_link|unclassified )     then 50
+else if ( highway=primary|primary_link )                    then switch equal cyclist_profile 5 10  120
+else if ( highway=secondary|secondary_link )                then switch equal cyclist_profile 5 30  80
+else if ( highway=tertiary|tertiary_link|unclassified )     then switch equal cyclist_profile 5 50  50
+else if ( highway=residential|living_street )               then switch equal cyclist_profile 5 80  30
+else if ( highway=cycleway|footway|path|track )             then switch equal cyclist_profile 5 100 30
 else 30
 
 # bend /initialcost                      
@@ -385,6 +406,8 @@ assign roughness_penalty max smoothness_penalty max mtb_scale_penalty  ( if ford
 assign rough_coef = add 1.0 ( multiply 0.33 roughness_penalty ) 
 
 assign univ_factor_coef 
+  if equal cyclist_profile 5 then 0.0
+  else
     switch  highway=motorway|motorway_link|trunk|trunk_link 1.0 switch highway=primary|primary_link   0.9
     switch  highway=secondary|secondary_link                0.7 switch highway=tertiary|tertiary_link 0.4
     switch  highway=unclassified                            0.25 
@@ -416,14 +439,30 @@ assign smallpaved_factor_for_road if  ( equal smallpaved_factor 0.0 ) then 0.0
 
 assign highwayclass_basefactor  
     if ismainroad then 
+      if equal cyclist_profile 5 then
+        # profil spécial convergence
+        switch highway=trunk|trunk_link          0.1  switch highway=primary|primary_link      0.1
+        switch highway=secondary|secondary_link  0.5  switch highway=tertiary|tertiary_link    1.0   1.2
+     
+      else
         switch highway=trunk|trunk_link          1.8  switch highway=primary|primary_link      1.5
         switch highway=secondary|secondary_link  1.2  switch highway=tertiary|tertiary_link    1.1   1.0
-      else if istrack  then 
-        switch highway=track 1.0 switch highway=path 1.1 switch highway=footway  1.2  1.0  # highway=road 
+    else if istrack  then 
+        if equal cyclist_profile 5 then
+          switch highway=track 5.0 switch highway=path 6.0 switch highway=footway  7.0  5.0
+        else
+          switch highway=track 1.0 switch highway=path 1.1 switch highway=footway  1.2  1.0  # highway=road 
      else 
-        switch highway=pedestrian 2.0 switch highway=bridleway 3.0
-        switch highway=cycleway   1.0 switch highway=residential|living_street   1.0
-        switch highway=service    1.1 cost_of_unknown 
+       if equal cyclist_profile 5 then
+         switch highway=pedestrian 3 
+         switch highway=bridleway 3
+         switch highway=cycleway   3
+         switch highway=residential|living_street|service 2 
+         cost_of_unknown 
+       else
+         switch highway=pedestrian 2.0 switch highway=bridleway 3.0
+         switch highway=cycleway   1.0 switch highway=residential|living_street   1.0
+         switch highway=service    1.1 cost_of_unknown 
   
   
 assign tracktype_penalty 
@@ -445,9 +484,11 @@ assign tracktype_surface_penalty
                                        
 assign not_isbike_penalty   if isbike then 0.0 
      else if ismainroad then
-        add switch bicycle=use_sidepath 2.0 0.0  
-        switch highway=trunk|trunk_link          8.2  switch highway=primary|primary_link      1.5  
-        switch highway=secondary|secondary_link  0.4  0.3 # tertiary|tertiary_link|unclassified
+       if equal cyclist_profile 5 then 0.0
+       else 
+         add switch bicycle=use_sidepath 2.0 0.0  
+          switch highway=trunk|trunk_link          8.2  switch highway=primary|primary_link      1.5  
+          switch highway=secondary|secondary_link  0.4  0.3 # tertiary|tertiary_link|unclassified
      else if istrack then  
         switch highway=footway            3.5   switch or ispaved tracktype=grade1 0.0 
         switch and tracktype= not isunpaved  ( switch highway=path 3.5 1.0 )
@@ -519,6 +560,23 @@ assign trafficpenalty =
 
 assign penaltymax = max roughness_penalty max tracktype_surface_penalty max wet_penalty trafficpenalty
 
+assign cycleway_parade_penalty switch equal cyclist_profile 5 ( if highway=cycleway then 5.0 else 0.0 ) 0.0
+
+assign   icncoef  max 0 min 1 multiply cycleroutes_pref 0.8
+assign   ncncoef  max 0 min 1 multiply cycleroutes_pref 0.8
+assign   rcncoef  max 0 min 1 multiply cycleroutes_pref 0.6
+assign   lcncoef  max 0 min 1 multiply cycleroutes_pref 0.5
+
+assign no_cycleroute_penalty
+   if equal cycleroutes_pref 0 then 0
+   else if not is_ldcr then cycleroutes_pref
+   else if ( and include_proposed_cycleroutes is_proposed_ldcr ) then multiply cycleroutes_pref 0.5
+   else if isicn then multiply cycleroutes_pref 0.05
+   else if isncn then multiply cycleroutes_pref 0.05
+   else if isrcn then multiply cycleroutes_pref 0.1
+   else if isrcn then multiply cycleroutes_pref 0.1
+   else multiply cycleroutes_pref 0.2
+
 assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor
   switch and highway= not route=ferry  10000 #only highways unless ferry
   switch highway=motorway|motorway_link|proposed|abandoned  10000
@@ -531,6 +589,8 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   add no_river_penalty
   add noise_penalty
   add traffic_penalty
+  add cycleway_parade_penalty
+  add no_cycleroute_penalty
   
   switch    highway=steps  switch allow_steps haulpenalty 10000
   switch    route=ferry    switch allow_ferries 5.67 10000
@@ -541,21 +601,23 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
 
   assign isCFgt9997       greater rawcostfactor 9997
   
-  assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
-  assign cycleroute_tweak 
+  #assign LDCRboost  multiply sub 1.0 rawcostfactor    cycleroutes_pref
+  #assign cycleroute_tweak 
   #2.6 reworked : non cyclenetwork penalty = + cycleroutes_pref  ( 0..1 , default 0.2)
   #               ICN boost                = - ( CF - 1 ) * cycleroutes_pref, leading to CF=1.0 for cycleroutes_pref = 1.0
   #               other CN: weitgted average of above, with weights ncncoef, lcncoef shifting with cycleroutes_pref
 
-         if not greater cycleroutes_pref 0.0 then 0.0
-         else if not is_ldcr then cycleroutes_pref
-         else if isicn then LDCRboost
-         else if isncn then add multiply ncncoef cycleroutes_pref     multiply ( sub  1.0 ncncoef ) LDCRboost 
-         else               add multiply lcncoef cycleroutes_pref     multiply ( sub  1.0 lcncoef ) LDCRboost 
+         #if not greater cycleroutes_pref 0.0 then 0.0
+         #else if not is_ldcr then cycleroutes_pref
+         #else if isicn then LDCRboost
+         #else if isncn then add multiply ncncoef cycleroutes_pref     multiply ( sub  1.0 ncncoef ) LDCRboost 
+         #else if isrcn then add multiply rcncoef cycleroutes_pref     multiply ( sub  1.0 rcncoef ) LDCRboost 
+         #else               add multiply lcncoef cycleroutes_pref     multiply ( sub  1.0 lcncoef ) LDCRboost 
                                                  
   # can be <1, adjusted to >=1 in final step of calculation of costfactor, uphillcostfactor,downhillcostfactor                              
   assign rawcostfactor2  if isCFgt9997 then rawcostfactor
-    else add rawcostfactor add cycleroute_tweak add MTB_factor_for_road smallpaved_factor_for_road   
+    #else add rawcostfactor add cycleroute_tweak add MTB_factor_for_road smallpaved_factor_for_road   
+    else add rawcostfactor add MTB_factor_for_road smallpaved_factor_for_road  
     
   assign access-penalty max onewaypenalty accesspenalty
 
