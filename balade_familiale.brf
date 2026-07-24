@@ -189,6 +189,7 @@ assign is_proposed_ldcr and ( not any_cn_yes ) any_cn_proposed
 
 
 assign istrack  highway=track|road|path|footway
+assign is_sidewalk and highway=footway and footway=sidewalk and not ( bicycle=yes|designated|permissive)
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
 assign isotherroad = not or istrack ismainroad
 
@@ -591,7 +592,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   add traffic_penalty
   add cycleway_parade_penalty
   add no_cycleroute_penalty
-  
+  switch    is_sidewalk    1000
   switch    highway=steps  switch allow_steps haulpenalty 10000
   switch    route=ferry    switch allow_ferries 5.67 10000
   switch    highway=construction                     10000
