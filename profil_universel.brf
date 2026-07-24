@@ -26,6 +26,10 @@ assign   hills                    = 0         # %hills% | Pénalité pour le rel
 
 assign   cargo_mode            switch equal cyclist_profile 2 true   switch equal cyclist_profile 3 true switch equal cyclist_profile 5 true false
 
+assign tolerance_regles_circulation = 1     # %tolerance_regles_circulation% | Niveau de tolérance aux règles de circulation (sens interdits, accès) | [0=Strict, 1=Normal, 2=Souple]
+assign multiplicateur_sens_interdit switch equal tolerance_regles_circulation 0 15.0 switch equal tolerance_regles_circulation 2 1.5 1.0
+assign multiplicateur_acces switch equal tolerance_regles_circulation 0 5.0  switch equal tolerance_regles_circulation 2 0.5 1.0
+
 assign   allow_steps              = true     # %allow_steps% | Activer pour accepter les escaliers (avec pénalité) | boolean
 assign   allow_dismount           = true     # %allow_dismount% | Activer pour accepter les barrières imposant de descendre du vélo, ou les zones interdites aux vélos (avec pénalité) |boolean
 
@@ -189,7 +193,7 @@ assign is_proposed_ldcr and ( not any_cn_yes ) any_cn_proposed
 
 
 assign istrack  highway=track|road|path|footway
-assign is_sidewalk and highway=footway and footway=sidewalk and not ( bicycle=yes|designated|permissive)
+assign is_sidewalk and highway=footway and footway=sidewalk not ( bicycle=yes|designated|permissive )
 assign ismainroad highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link
 assign isotherroad = not or istrack ismainroad
 
@@ -251,7 +255,7 @@ assign footaccess =
 assign accesspenalty =
        if bikeaccess then 0
        else if footaccess then 
-        ( if not allow_dismount then 10000 else pushpenalty )
+        ( if not allow_dismount then 10000 else multiply pushpenalty multiplicateur_acces )
        else 10000
 
 # handle one-ways. On primary roads, wrong-oneways should be close to forbidden
@@ -266,19 +270,23 @@ assign badoneway =
 
 assign onewaypenalty = 
        if ( badoneway ) then 
-         if equal cyclist_profile 5 then
-           if cycleway:left=share_busway then 0
-           else if highway=residential then 10
-           else 200
-         else if cycleway=opposite|opposite_lane|opposite_track  then 0
-         else if oneway:bicycle=no                          then 0
-         else if highway=primary|primary_link               then 50
-         else if highway=secondary|secondary_link           then 30
-         else if highway=tertiary|tertiary_link             then 20
-         else if and maxspeed=30 not oneway:bicycle=yes     then 10
-         else 20
-         
-       else 0.0   
+         multiply (
+           if equal cyclist_profile 5 then
+             if cycleway:left=share_busway then 0
+             else if highway=residential then 10
+             else 200
+           else if cycleway=opposite|opposite_lane|opposite_track  then 0
+           else if highway=primary|primary_link               then 50
+           else if highway=secondary|secondary_link           then 30
+           else if oneway:bicycle=no then
+              if or highway=living_street and highway=residential|unclassified maxspeed=30|20                          then -0.5
+              else 0.0
+           else if highway=tertiary|tertiary_link             then 20
+           else if and maxspeed=30 not oneway:bicycle=yes     then 5
+           else 20
+         ) multiplicateur_sens_interdit
+       else 0.0
+ 
 # add estimate tags
 assign traffic_penalty
    switch consider_traffic
@@ -590,6 +598,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
   add no_river_penalty
   add noise_penalty
   add traffic_penalty
+  add onewaypenalty
   add cycleway_parade_penalty
   add no_cycleroute_penalty
   switch    is_sidewalk    1000
@@ -620,7 +629,7 @@ assign rawcostfactor ( # can be <1, adjusted to >=1 in final step of calculation
     #else add rawcostfactor add cycleroute_tweak add MTB_factor_for_road smallpaved_factor_for_road   
     else add rawcostfactor add MTB_factor_for_road smallpaved_factor_for_road  
     
-  assign access-penalty max onewaypenalty accesspenalty
+  assign access-penalty accesspenalty
 
   assign costfactor    if isCFgt9997 then rawcostfactor2   else add access-penalty add Flat_Penalty max 1.0 rawcostfactor2
       
